@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -12,16 +13,25 @@ import (
 
 
 func downer(url string) error {
-	res := requests.Get(url, nil)
+	ceil := getSuffix(url)
+	name := joinPath(".", ceil)
+
+	headers := map[string]string{
+		"User-Agent": userAgent,
+		"Range": fmt.Sprintf("bytes=%d-", judge(name)),
+	}
+
+	res := requests.Get(url, &requests.Options{
+		Headers: headers,
+	})
 	defer res.Close()
 
-	ceil := getSuffix(url)
-	
-	return save(res.Raw().ContentLength, res.Body(), joinPath(".", ceil))
+
+	return save(res.Raw().ContentLength, res.Body(), name)
 }
 
-func save(size int64, r io.ReadCloser, name string) error {
-	file, err := os.Create(name)
+func save(Totalsize int64, r io.ReadCloser, name string) error {
+	file, err := os.OpenFile(name, os.O_APPEND | os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -29,7 +39,7 @@ func save(size int64, r io.ReadCloser, name string) error {
 
 	read := &reader{
 		Reader: r,
-		End: uint64(size),
+		End: uint64(Totalsize),
 	}
 
 	_, err = io.Copy(file, read)
