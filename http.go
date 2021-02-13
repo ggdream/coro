@@ -31,7 +31,7 @@ func downer(url string) error {
 }
 
 func save(Totalsize int64, r io.ReadCloser, name string) error {
-	file, err := os.OpenFile(name, os.O_APPEND | os.O_CREATE, os.ModePerm)
+	file, err := os.OpenFile(name, os.O_APPEND | os.O_CREATE | os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return err
 	}
